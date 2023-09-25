@@ -1,0 +1,3 @@
+[submodule "modules/opencv"]
+	path = modules/opencv
+	url = https://github.com/zhangwm-pt/prebuilt_opencv.git
