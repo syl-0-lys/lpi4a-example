@@ -26,7 +26,9 @@
 
 #include "io.h"
 #include "shl_ref.h"
-#include "shl_thead_rvv.h"
+//#include "shl_thead_rvv.h"
+void shl_rvv_f32_to_i16(const float *input, int16_t *output, int32_t offset, float *scale, uint32_t length);
+void shl_rvv_i16_to_f32(const int16_t *input, float *output, int32_t offset, float *scale, uint32_t length);
 
 void* csinn_(char* params);
 void csinn_update_input_and_run(struct csinn_tensor** input_tensors, void* sess);

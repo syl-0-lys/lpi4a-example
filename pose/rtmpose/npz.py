@@ -4,7 +4,6 @@ import time
 from typing import List, Tuple
 
 import os
-from shl_python import shl_wrapper
 import cv2
 import loguru
 import numpy as np
@@ -71,7 +70,7 @@ def build_session(onnx_file: str, device: str = 'cpu') -> ort.InferenceSession:
     Returns:
         sess (ort.InferenceSession): ONNXRuntime session.
     """
-    providers = ['CPUExecutionProvider'
+    providers = ['ShlExecutionProvider'
                  ] if device == 'cpu' else ['CUDAExecutionProvider']
     sess = ort.InferenceSession(path_or_bytes=onnx_file, providers=providers)
 
@@ -445,8 +444,6 @@ def main():
     # build onnx model
     logger.info('2. Build onnx model from {}...'.format(args.onnx_file))
     sess = build_session(args.onnx_file, args.device)
-    sess1 = build_session("rtmpose1_fp16.onnx", args.device)
-    hhb_sess = shl_wrapper.load_model("shl.hhb.bm")
     h, w = sess.get_inputs()[0].shape[2:]
     model_input_size = (w, h)
 
@@ -459,32 +456,8 @@ def main():
     start_time = time.time()
     resized_img = resized_img.transpose(2, 0, 1)
 
-    resized_img = resized_img.astype(np.float32)
-    hhb_input = np.copy(resized_img, order="C")
-
-    shl_wrapper.session_run(hhb_sess, [hhb_input])
-    output0 = shl_wrapper.get_output_by_index(hhb_sess, 0)
-    end_time = time.time()
-    logger.info('4. Inference done, time cost: {:.4f}s'.format(end_time -
-                                                               start_time))
-    # output0.tofile("output0.0.txt", "\n")
-    start_time = time.time()
-    outputs = inference(sess1, output0.reshape(133,8,6))
-
-    # outputs = inference(sess1, output0[0].reshape(133,8,6))
-    end_time = time.time()
-    logger.info('4. Inference done, time cost: {:.4f}s'.format(end_time -
-                                                               start_time))
-
-    # postprocessing
-    logger.info('5. Postprocess...')
-    keypoints, scores = postprocess(outputs, model_input_size, center, scale)
-
-    # visualize inference result
-    logger.info('6. Visualize inference result...')
-    visualize(img, keypoints, scores, args.save_path)
-
-    logger.info('Done...')
+    resized_img_npz = resized_img.reshape(1, 3, 256, 192).astype(np.float32)
+    np.savez("test.npz", input=resized_img_npz)
 
 
 if __name__ == '__main__':
